@@ -1,16 +1,18 @@
 use crate::RootStoreBuilder;
 use openssl_probe;
-use std::io::{Error, ErrorKind};
-use std::io::BufReader;
 use std::fs::File;
+use std::io::BufReader;
+use std::io::{Error, ErrorKind};
 use std::path::Path;
 
 fn load_file(builder: &mut impl RootStoreBuilder, path: &Path) -> Result<(), Error> {
     let f = File::open(&path)?;
     let mut f = BufReader::new(f);
     if builder.load_pem_file(&mut f).is_err() {
-        Err(Error::new(ErrorKind::InvalidData,
-                       format!("Could not load PEM file {:?}", path)))
+        Err(Error::new(
+            ErrorKind::InvalidData,
+            format!("Could not load PEM file {:?}", path),
+        ))
     } else {
         Ok(())
     }

@@ -16,12 +16,13 @@ mod macos;
 #[cfg(target_os = "macos")]
 use macos as platform;
 
+mod openssl;
+
 use std::io::Error;
-use std::io::BufRead;
 
 pub trait RootStoreBuilder {
-    fn load_der(&mut self, der: Vec<u8>) -> Result<(), Error>;
-    fn load_pem_file(&mut self, rd: &mut dyn BufRead) -> Result<(), Error>;
+    fn load_der(&mut self, der: &[u8]) -> Result<(), Error>;
+    fn load_pem(&mut self, pem: &[u8]) -> Result<(), Error>;
 }
 
 /// Loads root certificates found in the platform's native certificate

@@ -7,26 +7,23 @@ static PKIX_SERVER_AUTH: &str = "1.3.6.1.5.5.7.3.1";
 fn usable_for_openssl(uses: schannel::cert_context::ValidUses) -> bool {
     match uses {
         schannel::cert_context::ValidUses::All => true,
-        schannel::cert_context::ValidUses::Oids(strs) => {
-            strs.iter().any(|x| x == PKIX_SERVER_AUTH)
-        }
+        schannel::cert_context::ValidUses::Oids(strs) => strs.iter().any(|x| x == PKIX_SERVER_AUTH),
     }
 }
 
 pub fn build_native_certs<B: RootStoreBuilder>(builder: &mut B) -> Result<(), Error> {
     let mut first_error = None;
 
-    let current_user_store = schannel::cert_store::CertStore::open_current_user("ROOT")?;
+    let store = schannel::cert_store::CertStore::open_local_machine("ROOT")?;
 
-    for cert in current_user_store.certs() {
-        if !usable_for_openssl(cert.valid_uses().unwrap()) {
+    for cert in store.certs() {
+        if !usable_for_openssl(cert.valid_uses()?) {
             continue;
         }
 
-        match builder.load_der(cert.to_der().to_vec()) {
+        match builder.load_der(cert.to_der()) {
             Err(err) => {
-                first_error = first_error
-                    .or_else(|| Some(Error::new(ErrorKind::InvalidData, err)));
+                first_error = first_error.or_else(|| Some(Error::new(ErrorKind::InvalidData, err)));
             }
             _ => {}
         };
