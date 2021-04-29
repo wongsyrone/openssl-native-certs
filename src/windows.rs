@@ -5,7 +5,7 @@ use std::io::{Error, ErrorKind};
 pub fn build_native_certs<B: RootStoreBuilder>(builder: &mut B) -> Result<(), Error> {
     let mut first_error = None;
 
-    let store = schannel::cert_store::CertStore::open_local_machine("ROOT")?;
+    let store = schannel::cert_store::CertStore::open_current_user("ROOT")?;
 
     for cert in store.certs() {
         match builder.load_der(cert.to_der()) {
