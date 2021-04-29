@@ -1,10 +1,8 @@
-use security_framework::trust_settings::{
-    Domain,
-    TrustSettings,
-    TrustSettingsForCertificate
+use security_framework::trust_settings::{Domain, TrustSettings, TrustSettingsForCertificate};
+use std::{
+    collections::HashMap,
+    io::{Error, ErrorKind},
 };
-use std::io::{Error, ErrorKind};
-use std::collections::HashMap;
 
 use crate::RootStoreBuilder;
 
@@ -24,8 +22,7 @@ pub fn build_native_certs<B: RootStoreBuilder>(builder: &mut B) -> Result<(), Er
 
     for domain in &[Domain::User, Domain::Admin, Domain::System] {
         let ts = TrustSettings::new(*domain);
-        let iter = ts.iter()
-            .map_err(|err| Error::new(ErrorKind::Other, err))?;
+        let iter = ts.iter().map_err(|err| Error::new(ErrorKind::Other, err))?;
 
         for cert in iter {
             let der = cert.to_der();
@@ -36,12 +33,12 @@ pub fn build_native_certs<B: RootStoreBuilder>(builder: &mut B) -> Result<(), Er
             //
             // "Note that an empty Trust Settings array means "always trust this cert,
             //  with a resulting kSecTrustSettingsResult of kSecTrustSettingsResultTrustRoot".
-            let trusted = ts.tls_trust_settings_for_certificate(&cert)
+            let trusted = ts
+                .tls_trust_settings_for_certificate(&cert)
                 .map_err(|err| Error::new(ErrorKind::Other, err))?
                 .unwrap_or(TrustSettingsForCertificate::TrustRoot);
 
-            all_certs.entry(der)
-                .or_insert(trusted);
+            all_certs.entry(der).or_insert(trusted);
         }
     }
 
@@ -51,16 +48,14 @@ pub fn build_native_certs<B: RootStoreBuilder>(builder: &mut B) -> Result<(), Er
     // to use them.
     for (der, trusted) in all_certs.drain() {
         match trusted {
-            TrustSettingsForCertificate::TrustRoot |
-                TrustSettingsForCertificate::TrustAsRoot => {
+            TrustSettingsForCertificate::TrustRoot | TrustSettingsForCertificate::TrustAsRoot => {
                 match builder.load_der(der) {
                     Err(err) => {
-                        first_error = first_error
-                            .or_else(|| Some(Error::new(ErrorKind::InvalidData, err)));
+                        first_error = first_error.or_else(|| Some(Error::new(ErrorKind::InvalidData, err)));
                     }
                     _ => {}
                 };
-            },
+            }
             _ => {} // discard
         }
     }

@@ -17,6 +17,7 @@ mod macos;
 use macos as platform;
 
 mod openssl;
+pub use crate::openssl::load_native_certs;
 
 use std::io::Error;
 
